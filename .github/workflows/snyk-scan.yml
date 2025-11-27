@@ -5,6 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+      
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/node@master
         continue-on-error: true
@@ -13,7 +14,17 @@ jobs:
         with:
           command: test
           args: --sarif-file-output=snyk.sarif --all-projects
+          
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: snyk.sarif
+
+      - name: Archive code if secure
+        run: zip -r secure-code.zip . -x ".git/*" "node_modules/*" "server/node_modules/*"
+
+      - name: Upload result as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: secure-code-archive
+          path: secure-code.zip
